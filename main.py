@@ -6,14 +6,16 @@ from visualize import plot_scores_2d, plot_scores_3d, plot_density, plot_loading
 from kmeans import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import FeatureAgglomeration
+import sklearn.decomposition as decomposition
 from utils import evaluate_clustering_number, make_plots
 import numpy as np
 parser = argparse.ArgumentParser()
 
 ### run--> python main.py --dataset vote
 parser.add_argument("--dataset", type=str, default='vote', choices=['vote', 'hyp', 'vehi'])
-parser.add_argument("--dimReduction", type=str, default='pca', choices=['pca', 'fa'])
+parser.add_argument("--dimReduction", type=str, default='pca', choices=['pca', 'fa', "pca_sk","ipca"])
 parser.add_argument("--tsne", type=bool, default=True)
+parser.add_argument("--perplexity_analysis", type=bool, default= False)
 parser.add_argument("--num_dimensions", type=int, default=3)
 parser.add_argument("--clusteringAlg", type=str, default='agg', choices=['km', 'agg'])
 parser.add_argument("--max_num_clusters", type=int, default=7, choices=range(2,100))
@@ -35,6 +37,7 @@ def configuration():
                 'max_num_clusters': con.max_num_clusters,
                 'visualize_results': con.visualize_results,
                 'plot_scores_colored_by_cluster' : con.plot_scores_colored_by_cluster,
+                'perplexity_analysis': con.perplexity_analysis,
                 'tsne':con.tsne
              }
     return config
@@ -87,15 +90,20 @@ def main():
 
     best_configs = {
         'vote':{'pca':{'kmeans':[3], 'agg':[2, 'complete']},
+                'pca_sk':{'kmeans':[3], 'agg':[2, 'complete']},
+                'ipca': {'kmeans': [3], 'agg': [2, 'complete']},
                 'fa': {'kmeans': [3], 'agg': [2, 'complete']},
                 'tsne':{'kmeans':[2],'agg':[2, 'ward']}},
         'hyp': {'pca': {'kmeans': [3], 'agg': [2, 'complete']},
+                'pca_sk': {'kmeans': [3], 'agg': [2, 'complete']},
+                'ipca': {'kmeans': [3], 'agg': [2, 'complete']},
                 'fa': {'kmeans': [3], 'agg': [2, 'complete']},
                 'tsne': {'kmeans': [2], 'agg': [2, 'ward']}},
         'vehi': {'pca': {'kmeans': [3], 'agg': [2, 'complete']},
-                'fa': {'kmeans': [3], 'agg': [2, 'complete']},
-                'pcasklearn': {'kmeans': [3], 'agg': [2, 'complete']},
-                'pcaincremental': {'kmeans': [3], 'agg': [2, 'complete']}}
+                 'pca_sk': {'kmeans': [3], 'agg': [2, 'complete']},
+                 'ipca': {'kmeans': [3], 'agg': [2, 'complete']},
+                 'fa': {'kmeans': [3], 'agg': [2, 'complete']},
+                 'tsne':{'kmeans':[2],'agg':[2, 'ward']}}
     }
 
     # perform dimensionality reduction
@@ -150,20 +158,46 @@ def main():
                                                      linkage=best_configs[config['dataset']]['fa']['agg'][1]).fit_predict(scores)
             np.save('./results/fa_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
 
-    if config['dimReduction'] == 'sklearnpca':
-        #fa = FeatureAgglomeration(n_clusters=config['num_dimensions']) PCA SKLEARN .90
-        scores = fa.fit_transform(X.values)
-        # perform clustering analysis
-        evaluate_clustering_number(config, scores, Y, dim_reduc=True)
+    if config['dimReduction'] == 'pca_sk':
+        pca_sk = decomposition.PCA()
+        scores = pca_sk.fit_transform(X.values)
+        cumulative_var_exp = np.cumsum(pca_sk.explained_variance_ratio_) * 100
+        n_com_90_ex_var = [index for index, v in enumerate(cumulative_var_exp) if v >= 90][0]
+        evaluate_clustering_number(config, scores[:, 0:n_com_90_ex_var], Y, dim_reduc=True)
 
-    if config['dimReduction'] == 'incrementalpca':
-        #fa = FeatureAgglomeration(n_clusters=config['num_dimensions']) Incremental PCA
-        scores = fa.fit_transform(X.values)
-        # perform clustering analysis
-        evaluate_clustering_number(config, scores, Y, dim_reduc=True)
+        if config['clusteringAlg'] == 'km':
+            cluster_dimred = KMeans(best_configs[config['dataset']]['pca_sk']['kmeans'][0]).fit_predict(
+                scores[:, 0:n_com_90_ex_var])
+            np.save('./results/pca_sk_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
 
+        if config['clusteringAlg'] == 'agg':
+            cluster_dimred = AgglomerativeClustering(n_clusters=best_configs[config['dataset']]['pca_sk']['agg'][0],
+                                                     affinity='euclidean',
+                                                     linkage=best_configs[config['dataset']]['pca_sk']['agg'][
+                                                         1]).fit_predict(scores[:, 0:n_com_90_ex_var])
+            np.save('./results/pca_sk_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
 
-    if config['tsne']:
+    if config['dimReduction'] == 'ipca':
+        ipca = decomposition.IncrementalPCA()
+        scores = ipca.fit_transform(X.values)
+
+        cumulative_var_exp = np.cumsum(ipca.explained_variance_ratio_) * 100
+        n_com_90_ex_var = [index for index, v in enumerate(cumulative_var_exp) if v >= 90][0]
+        evaluate_clustering_number(config, scores[:, 0:n_com_90_ex_var], Y, dim_reduc=True)
+
+        if config['clusteringAlg'] == 'km':
+            cluster_dimred = KMeans(best_configs[config['dataset']]['ipca']['kmeans'][0]).fit_predict(
+                scores[:, 0:n_com_90_ex_var])
+            np.save('./results/ipca_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
+
+        if config['clusteringAlg'] == 'agg':
+            cluster_dimred = AgglomerativeClustering(n_clusters=best_configs[config['dataset']]['ipca']['agg'][0],
+                                                     affinity='euclidean',
+                                                     linkage=best_configs[config['dataset']]['ipca']['agg'][
+                                                         1]).fit_predict(scores[:, 0:n_com_90_ex_var])
+            np.save('./results/ipca_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
+
+    if config['tsne'] is True:
         # compute T-SNE
         X_embedded = TSNE(n_components=config['num_dimensions'], learning_rate='auto', init = 'random', perplexity = 50,
                           random_state = 34).fit_transform(X.values)
@@ -204,6 +238,33 @@ def main():
             plot_scores_2d(scores, cluster, savefig='./plots/{}/pca/{}_'.format(config['dataset'], name), tsne=False)
             plot_density(X_embedded, cluster, dim=1, savefig='./plots/{}/tsne/{}_'.format(config['dataset'], name), tsne=True)
             plot_density(scores, cluster, dim=1, savefig='./plots/{}/pca/{}_'.format(config['dataset'], name), tsne=False)
+
+    if config['perplexity_analysis'] is True:
+
+        plt.figure(figsize=(24, 16))
+        grid = plt.GridSpec(2, 3, wspace=0.2, hspace=0.5)
+        plt.rcParams.update({'font.size': 15})
+
+        if config['dataset'] == 'vote':
+            replace_vote = {0: 'republican', 1: 'democrat'}
+            for n, perp in enumerate([5, 10, 20, 30, 40, 50]):
+                ax = plt.subplot(grid[n // 3, n - (n // 3) * 3])
+                X_embedded = TSNE(n_components=config['num_dimensions'], learning_rate='auto', init='random',
+                                  perplexity=perp ,random_state=34).fit_transform(X.values)
+                plot_scores_2d(X_embedded, Y.replace(replace_vote).values, tsne=True, axes = ax,perplexity=perp)
+
+        elif config['dataset'] == 'hyp':
+            replace_hyp = {0: 'negative', 1: 'compensated_hypothyroid', 2: 'primary_hypothyroid',
+                           3: 'secondary_hypothyroid'}
+            for n, perp in enumerate([5, 10, 20, 30, 40, 50]):
+                ax = plt.subplot(grid[n // 3, n - (n // 3) * 3])
+                X_embedded = TSNE(n_components=config['num_dimensions'], learning_rate='auto', init='random',
+                                  perplexity=perp ,random_state=34).fit_transform(X.values)
+                plot_scores_2d(X_embedded, Y.replace(replace_hyp).values , tsne=True, axes = ax,perplexity=perp)
+
+        plt.savefig('./plots/{}/tsne/perplexity_Analysis.jpg'.format(config['dataset']), dpi=350,
+                    bbox_inches='tight')
+
 
 if __name__ == '__main__':
 	main()

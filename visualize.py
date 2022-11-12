@@ -23,22 +23,31 @@ def plot_loadings(loadings, columns, savefig = None, dim_1=1, dim_2=2):
         plt.savefig(savefig + 'loadings_{}_{}.jpg'.format(dim_1, dim_2), dpi=350, bbox_inches='tight')
     plt.close()
 
-def plot_scores_2d(scores, Y, savefig = None, dim_1=1, dim_2=2, tsne=False):
+def plot_scores_2d(scores, Y, savefig = None, dim_1=1, dim_2=2, tsne=False,axes= None,perplexity= None):
+
     colors = ['#689F38', '#039BE5', '#FF6F00', '#F44336', '#26C6DA']
     plt.style.use('seaborn-whitegrid')
-    plt.rcParams.update({'font.size': 22})
-    fig = plt.figure(figsize=(15, 10))
+
+    if axes is None:
+        fig = plt.figure(figsize=(15, 10))
+        plt.rcParams.update({'font.size': 22})
+        plt.title('PCA Space')
+    else:
+        plt.axes(axes)
+        plt.title('Perplexity ' + str(perplexity))
+
     plt.axhline(c='black', alpha=0.2)
     plt.axvline(c='black', alpha=0.2)
     for i, group in enumerate(np.unique(Y)):
         plt.scatter(scores[np.where(Y == group),dim_1 - 1], scores[np.where(Y == group),dim_2 - 1], alpha = 0.82, c=colors[i], label = group)
     plt.grid(True)
-    plt.title('PCA Space')
     plt.legend()
     plt.xlabel('Principal component {}'.format(dim_1) if tsne is False else 'Embedding {}'.format(dim_1))
     plt.ylabel('Principal component {}'.format(dim_2) if tsne is False else 'Embedding {}'.format(dim_2))
     if savefig is not None:
         plt.savefig(savefig + 'scores_{}_{}.jpg'.format(dim_1, dim_2), dpi=350, bbox_inches='tight')
+    if axes is not None:
+        return plt
     plt.close()
 
 def plot_scores_3d(scores, Y, savefig = None, dim_1=1, dim_2=2, dim_3=3, tsne=False):
