@@ -31,7 +31,7 @@ def plot_scores_2d(scores, Y, savefig = None, dim_1=1, dim_2=2, tsne=False,axes=
     if axes is None:
         fig = plt.figure(figsize=(15, 10))
         plt.rcParams.update({'font.size': 22})
-        plt.title('PCA Space')
+        plt.title('PCA Space' if tsne is False else 'TSNE space')
     else:
         plt.axes(axes)
         plt.title('Perplexity ' + str(perplexity))
