@@ -71,6 +71,29 @@ def plot_scores_3d(scores, Y, savefig = None, dim_1=1, dim_2=2, dim_3=3, tsne=Fa
         plt.savefig(savefig + 'scores3d_{}_{}.jpg'.format(dim_1, dim_2), dpi=350, bbox_inches='tight')
     plt.close()
 
+def plot_vars_3d(X, Y, savefig = None):
+    colors = ['#689F38', '#039BE5', '#FF6F00', '#F44336', '#26C6DA', '#9C27B0', '#E64A19', '#EC407A', '#37474F',
+              '#00796B', '#304FFE', '#6D4C41', '#AA00FF']
+    plt.style.use('seaborn-whitegrid')
+    fig = plt.figure(figsize=(15, 10))
+    plt.rcParams.update({'font.size': 15})
+    ax = fig.add_subplot(projection="3d")
+
+    max_vars = X.columns[np.argpartition(X.var(), -3)[-3:].values]
+    for i, group in enumerate(np.unique(Y)):
+        print(group)
+        ax.scatter3D(np.delete(np.where(Y==group, X[max_vars[0]], 999), np.where(np.where(Y==group, X[max_vars[0]], 999) == 999)), np.delete(np.where(Y==group, X[max_vars[1]], 999), np.where(np.where(Y==group, X[max_vars[1]], 999) == 999)), np.delete(np.where(Y==group, X[max_vars[2]], 999), np.where(np.where(Y==group, X[max_vars[2]], 999) == 999)), alpha = 0.82, c=colors[i])
+    plt.grid(True)
+    plt.title('Highest variance variables')
+    ax.set_xlabel(max_vars[0])
+    ax.set_ylabel(max_vars[1])
+    ax.set_zlabel(max_vars[2])
+    ax.view_init(10, 260)
+    plt.legend(np.unique(Y))
+    if savefig is not None:
+        plt.savefig(savefig + 'plot_3d.jpg', dpi=350, bbox_inches='tight')
+    plt.close()
+
 def plot_density(scores, Y, savefig = None, dim=1, tsne=False):
     colors = ['#689F38', '#039BE5', '#FF6F00', '#F44336', '#26C6DA']
     plt.style.use('seaborn-whitegrid')
