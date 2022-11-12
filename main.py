@@ -65,6 +65,8 @@ def main():
 
     elif config['dataset'] == 'vehi':
         X, Y = preprocess_vehicle()
+        replace_vehi = {0: 'opel', 1: 'saab', 2: 'bus', 3:'van'}
+        plot_vars_3d(X, Y.replace(replace_vehi).values, savefig='./plots/{}/'.format(config['dataset']))
 
     # perform clustering analysis without pca nor tsne
     if config['clusteringAlg'] == 'km':

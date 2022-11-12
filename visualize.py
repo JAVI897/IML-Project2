@@ -80,15 +80,15 @@ def plot_vars_3d(X, Y, savefig = None):
     ax = fig.add_subplot(projection="3d")
 
     max_vars = X.columns[np.argpartition(X.var(), -3)[-3:].values]
+    print(max_vars)
     for i, group in enumerate(np.unique(Y)):
-        print(group)
         ax.scatter3D(np.delete(np.where(Y==group, X[max_vars[0]], 999), np.where(np.where(Y==group, X[max_vars[0]], 999) == 999)), np.delete(np.where(Y==group, X[max_vars[1]], 999), np.where(np.where(Y==group, X[max_vars[1]], 999) == 999)), np.delete(np.where(Y==group, X[max_vars[2]], 999), np.where(np.where(Y==group, X[max_vars[2]], 999) == 999)), alpha = 0.82, c=colors[i])
     plt.grid(True)
     plt.title('Highest variance variables')
     ax.set_xlabel(max_vars[0])
     ax.set_ylabel(max_vars[1])
     ax.set_zlabel(max_vars[2])
-    ax.view_init(10, 260)
+    ax.view_init(10, 50)
     plt.legend(np.unique(Y))
     if savefig is not None:
         plt.savefig(savefig + 'plot_3d.jpg', dpi=350, bbox_inches='tight')
