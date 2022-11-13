@@ -1,0 +1,11 @@
+Number of clusters,ari,sil,dbs,ch,dataset,clusteringAlg,affinity,linkage
+2,0.592,0.375,1.125,317.803,vote,km,None,None
+3,0.469,0.281,1.859,199.327,vote,km,None,None
+4,0.392,0.184,2.431,141.822,vote,km,None,None
+5,0.319,0.167,2.171,115.891,vote,km,None,None
+6,0.297,0.163,2.228,97.387,vote,km,None,None
+2,0.695,0.362,1.142,295.142,vote,agg,euclidean,complete
+3,0.547,0.282,1.748,189.51,vote,agg,euclidean,complete
+4,0.364,0.198,2.137,140.86,vote,agg,euclidean,complete
+5,0.34,0.169,2.025,113.89,vote,agg,euclidean,complete
+6,0.32,0.176,1.948,97.247,vote,agg,euclidean,complete

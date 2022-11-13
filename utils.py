@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from kmeans import KMeans
 
-def evaluate_clustering_number(config, X, Y, dim_reduc = False):
+def evaluate_clustering_number(config, X, Y, original_X, dim_reduc = False):
     """
     evaluate_clustering_number
     Function that depending on the Clustering algorithm
@@ -20,6 +20,7 @@ def evaluate_clustering_number(config, X, Y, dim_reduc = False):
     :param config: config dictionary
     :param X: nxd dataset
     :param Y: target
+    :param original_X: original X data matrix
     :return eval dictionary which keys are the number of
     clusters and values another dictionary with the metrics
     for each number of cluster
@@ -34,9 +35,9 @@ def evaluate_clustering_number(config, X, Y, dim_reduc = False):
 
         labels = clustering.fit_predict(X)
         ari = adjusted_rand_score(Y, labels)
-        sil = silhouette_score(X, labels)
-        dbs = davies_bouldin_score(X, labels)
-        ch = calinski_harabasz_score(X, labels)
+        sil = silhouette_score(original_X, labels)
+        dbs = davies_bouldin_score(original_X, labels)
+        ch = calinski_harabasz_score(original_X, labels)
         eval[n] = {'ari':round(ari, 3), 'sil': round(sil, 3), 'dbs': round(dbs, 3), 'ch': round(ch, 3)}
 
     #make_plots(config, eval)

@@ -1,0 +1,11 @@
+Number of clusters,ari,sil,dbs,ch,dataset,clusteringAlg,affinity,linkage
+2,0.022,0.138,2.416,487.683,hyp,km,None,None
+3,0.021,0.109,2.328,398.784,hyp,km,None,None
+4,-0.019,0.13,1.941,487.844,hyp,km,None,None
+5,0.001,0.14,1.648,574.159,hyp,km,None,None
+6,0.003,0.12,1.711,535.242,hyp,km,None,None
+2,0.021,0.132,2.606,406.085,hyp,agg,cosine,average
+3,-0.01,0.107,2.17,418.993,hyp,agg,cosine,average
+4,-0.01,0.074,2.255,331.536,hyp,agg,cosine,average
+5,-0.013,0.041,2.353,292.049,hyp,agg,cosine,average
+6,0.004,0.061,2.278,306.913,hyp,agg,cosine,average

@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser()
 
 ### run--> python main.py --dataset vote
 parser.add_argument("--dataset", type=str, default='vote', choices=['vote', 'hyp', 'vehi'])
-parser.add_argument("--dimReduction", type=str, default='pca', choices=['pca', 'fa', "pca_sk","ipca"])
+parser.add_argument("--dimReduction", type=str, default='pca', choices=['pca', 'fa', 'pca_sk','ipca'])
 parser.add_argument("--tsne", type=bool, default=True)
 parser.add_argument("--perplexity_analysis", type=bool, default= False)
 parser.add_argument("--num_dimensions", type=int, default=3)
@@ -70,7 +70,7 @@ def main():
 
     # perform clustering analysis without pca nor tsne
     if config['clusteringAlg'] == 'km':
-        evaluate_clustering_number(config, X.values, Y)
+        evaluate_clustering_number(config, X.values, Y, X.values)
         if config['dataset'] == 'vote':
             # run evaluation of number of clusters
             cluster_no_dimred = KMeans(2).fit_predict(X.values)
@@ -83,7 +83,7 @@ def main():
             np.save('./results/{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_no_dimred)
 
     if config['clusteringAlg'] == 'agg':
-        evaluate_clustering_number(config, X, Y)
+        evaluate_clustering_number(config, X.values, Y, X.values)
         if config['dataset'] == 'vote':
             cluster_no_dimred = AgglomerativeClustering(n_clusters = 2, affinity='euclidean', linkage='complete').fit_predict(X.values)
             np.save('./results/{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_no_dimred)
@@ -105,7 +105,7 @@ def main():
         pca = PCA(X.values, config['num_dimensions'], savefig = './plots/{}/pca/'.format(config['dataset']), verbose = True)
         scores, n_com_90_ex_var = pca.fit_transform()
         # perform clustering analysis
-        evaluate_clustering_number(config, scores[:,0:n_com_90_ex_var], Y, dim_reduc=True)
+        evaluate_clustering_number(config, scores[:,0:n_com_90_ex_var], Y, X.values, dim_reduc=True)
         if config['clusteringAlg'] == 'km':
             cluster_dimred = KMeans(best_configs[config['dataset']]['kmeans'][0]).fit_predict(scores[:,0:n_com_90_ex_var])
             np.save('./results/pca_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
@@ -143,7 +143,7 @@ def main():
         fa = FeatureAgglomeration(n_clusters=config['num_dimensions'])
         scores = fa.fit_transform(X.values)
         # perform clustering analysis
-        evaluate_clustering_number(config, scores, Y, dim_reduc=True)
+        evaluate_clustering_number(config, scores, Y, X.values, dim_reduc=True)
         if config['clusteringAlg'] == 'km':
             cluster_dimred = KMeans(best_configs[config['dataset']]['kmeans'][0]).fit_predict(scores)
             np.save('./results/fa_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
@@ -158,7 +158,7 @@ def main():
         scores = pca_sk.fit_transform(X.values)
         cumulative_var_exp = np.cumsum(pca_sk.explained_variance_ratio_) * 100
         n_com_90_ex_var = [index for index, v in enumerate(cumulative_var_exp) if v >= 90][0]
-        evaluate_clustering_number(config, scores[:, 0:n_com_90_ex_var], Y, dim_reduc=True)
+        evaluate_clustering_number(config, scores[:, 0:n_com_90_ex_var], Y, X.values, dim_reduc=True)
 
         if config['clusteringAlg'] == 'km':
             cluster_dimred = KMeans(best_configs[config['dataset']]['kmeans'][0]).fit_predict(
@@ -177,7 +177,7 @@ def main():
 
         cumulative_var_exp = np.cumsum(ipca.explained_variance_ratio_) * 100
         n_com_90_ex_var = [index for index, v in enumerate(cumulative_var_exp) if v >= 90][0]
-        evaluate_clustering_number(config, scores[:, 0:n_com_90_ex_var], Y, dim_reduc=True)
+        evaluate_clustering_number(config, scores[:, 0:n_com_90_ex_var], Y, X.values, dim_reduc=True)
 
         if config['clusteringAlg'] == 'km':
             cluster_dimred = KMeans(best_configs[config['dataset']]['kmeans'][0]).fit_predict(
