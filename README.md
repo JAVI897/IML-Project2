@@ -43,6 +43,7 @@ python main.py --dataset <dataset>
                --plot_scores_colored_by_cluster <plot_scores_colored_by_cluster>
                --affinity <affinity>
                --linkage <linkage>
+               --analyze_fa_components <analyze_fa_components>
 ```
 Specifying the parameters  according to the following table:
 

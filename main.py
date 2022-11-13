@@ -291,6 +291,7 @@ def main():
             eval[n_fa] = [ari_km, ari_agg]
 
         fig = plt.figure(figsize=(15, 10))
+        plt.rcParams.update({'font.size': 22})
         number_dimensions = list(range(2, 15))
         plt.plot(number_dimensions, [v[0] for _, v in eval.items()], marker = 'o', linestyle='solid',  markersize=12, linewidth=3,
                  label = 'SC - K-means {} clusters'.format(best_configs[config['dataset']]['kmeans'][0]))
