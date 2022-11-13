@@ -2,7 +2,7 @@ import argparse
 from datasets import preprocess_vote, preprocess_hypothyroid, preprocess_vehicle
 from dim_reduction import PCA
 from sklearn.manifold import TSNE
-from visualize import plot_scores_2d, plot_scores_3d, plot_density, plot_loadings, plot_vars_3d
+from visualize import plot_scores_2d, plot_scores_3d, plot_density, plot_loadings, plot_vars_3d, plot_vars_2d
 from kmeans import KMeans
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import FeatureAgglomeration
@@ -56,7 +56,7 @@ def main():
     ### load dataset
     if config['dataset'] == 'vote':
         X, Y = preprocess_vote()
-        plot_vars_3d(X, Y, savefig='./plots/{}/'.format(config['dataset']))
+        plot_vars_2d(X, Y, savefig='./plots/{}/'.format(config['dataset']))
 
     elif config['dataset'] == 'hyp':
         X, Y = preprocess_hypothyroid()
