@@ -2,6 +2,8 @@ import argparse
 from datasets import preprocess_vote, preprocess_hypothyroid, preprocess_vehicle
 from dim_reduction import PCA
 from sklearn.manifold import TSNE
+from sklearn.metrics.cluster import adjusted_rand_score
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 from visualize import plot_scores_2d, plot_scores_3d, plot_density, plot_loadings, plot_vars_3d, plot_vars_2d
 from kmeans import KMeans
 from sklearn.cluster import AgglomerativeClustering
@@ -15,8 +17,9 @@ parser = argparse.ArgumentParser()
 ### run--> python main.py --dataset vote
 parser.add_argument("--dataset", type=str, default='vote', choices=['vote', 'hyp', 'vehi'])
 parser.add_argument("--dimReduction", type=str, default='pca', choices=['pca', 'fa', 'pca_sk','ipca'])
-parser.add_argument("--tsne", type=bool, default=True)
+parser.add_argument("--compute_tsne", type=bool, default=False)
 parser.add_argument("--perplexity_analysis", type=bool, default= False)
+parser.add_argument("--analyze_fa_components", type=bool, default= False)
 parser.add_argument("--num_dimensions", type=int, default=3)
 parser.add_argument("--clusteringAlg", type=str, default='agg', choices=['km', 'agg'])
 parser.add_argument("--max_num_clusters", type=int, default=7, choices=range(2,100))
@@ -39,7 +42,8 @@ def configuration():
                 'visualize_results': con.visualize_results,
                 'plot_scores_colored_by_cluster' : con.plot_scores_colored_by_cluster,
                 'perplexity_analysis': con.perplexity_analysis,
-                'tsne':con.tsne
+                'compute_tsne':con.compute_tsne,
+                'analyze_fa_components': con.analyze_fa_components
              }
     return config
 
@@ -95,8 +99,8 @@ def main():
             np.save('./results/{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_no_dimred)
 
     best_configs = {
-        'vote':{'kmeans':[3], 'agg':[2, 'euclidean', 'complete']},
-        'hyp':{'kmeans':[3],   'agg':[2, 'cosine', 'average']},
+        'vote':{'kmeans':[2], 'agg':[2, 'cosine', 'complete']},
+        'hyp':{'kmeans':[3],   'agg':[5, 'cosine', 'average']},
         'vehi':{'kmeans':[2],   'agg':[2, 'cosine', 'complete']}
     }
 
@@ -141,16 +145,16 @@ def main():
 
     if config['dimReduction'] == 'fa':
         fa = FeatureAgglomeration(n_clusters=config['num_dimensions'])
-        scores = fa.fit_transform(X.values)
+        scores_fa = fa.fit_transform(X.values)
         # perform clustering analysis
-        evaluate_clustering_number(config, scores, Y, X.values, dim_reduc=True)
+        evaluate_clustering_number(config, scores_fa, Y, X.values, dim_reduc=True)
         if config['clusteringAlg'] == 'km':
-            cluster_dimred = KMeans(best_configs[config['dataset']]['kmeans'][0]).fit_predict(scores)
+            cluster_dimred = KMeans(best_configs[config['dataset']]['kmeans'][0]).fit_predict(scores_fa)
             np.save('./results/fa_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
         if config['clusteringAlg'] == 'agg':
             cluster_dimred = AgglomerativeClustering(n_clusters=best_configs[config['dataset']]['agg'][0],
                                                      affinity=best_configs[config['dataset']]['agg'][1],
-                                                     linkage=best_configs[config['dataset']]['agg'][2]).fit_predict(scores)
+                                                     linkage=best_configs[config['dataset']]['agg'][2]).fit_predict(scores_fa)
             np.save('./results/fa_{}_{}.npy'.format(config['clusteringAlg'], config['dataset']), cluster_dimred)
 
     if config['dimReduction'] == 'pca_sk':
@@ -195,9 +199,9 @@ def main():
         'vehi':30,
         'hyp': 30
     }
-    if config['tsne'] is True:
+    if config['compute_tsne'] is True:
         # compute T-SNE
-        X_embedded = TSNE(n_components=config['num_dimensions'], init = 'random', perplexity = perplexity_config[config['dataset']],
+        X_embedded = TSNE(n_components=min(config['num_dimensions'], 3), init = 'random', perplexity = perplexity_config[config['dataset']],
                           learning_rate=max(X.shape[0] / 12 / 4, 50),
                           random_state = 34).fit_transform(X.values)
 
@@ -273,6 +277,33 @@ def main():
         plt.savefig('./plots/{}/tsne/perplexity_Analysis.jpg'.format(config['dataset']), dpi=350,
                     bbox_inches='tight')
 
+    if config['analyze_fa_components'] is True:
+        eval = {}
+        for n_fa in range(2, 15):
+            fa = FeatureAgglomeration(n_clusters=n_fa)
+            scores = fa.fit_transform(X.values)
+            km_labels = KMeans(best_configs[config['dataset']]['kmeans'][0]).fit_predict(scores)
+            agg_labels = AgglomerativeClustering(n_clusters=best_configs[config['dataset']]['agg'][0],
+                                                     affinity=best_configs[config['dataset']]['agg'][1],
+                                                     linkage=best_configs[config['dataset']]['agg'][2]).fit_predict(scores)
+            ari_agg = silhouette_score(X.values, agg_labels)
+            ari_km = silhouette_score(X.values, km_labels)
+            eval[n_fa] = [ari_km, ari_agg]
+
+        fig = plt.figure(figsize=(15, 10))
+        number_dimensions = list(range(2, 15))
+        plt.plot(number_dimensions, [v[0] for _, v in eval.items()], marker = 'o', linestyle='solid',  markersize=12, linewidth=3,
+                 label = 'SC - K-means {} clusters'.format(best_configs[config['dataset']]['kmeans'][0]))
+        plt.plot(number_dimensions, [v[1] for _, v in eval.items()], marker = 'o', linestyle='solid', markersize=12, linewidth=3,
+                 label='SC - Agg {} clusters, {}-{}'.format(best_configs[config['dataset']]['agg'][0],
+                                                             best_configs[config['dataset']]['agg'][1],
+                                                             best_configs[config['dataset']]['agg'][2]))
+        plt.legend()
+        plt.xticks(number_dimensions)
+        plt.xlabel('FA dimensions')
+        plt.ylabel('SC')
+        plt.title('{} dataset. SC for different number of dimensions in Feature Agglomeration'.format(config['dataset']))
+        plt.savefig('./plots/{}/fa_dimensions_sc.jpg'.format(config['dataset']), dpi = 350, bbox_inches='tight')
 
 if __name__ == '__main__':
 	main()

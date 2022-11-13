@@ -1,9 +1,9 @@
 Number of clusters,ari,sil,dbs,ch,dataset,clusteringAlg,affinity,linkage
-2,0.103,0.324,1.219,472.618,vehi,km,None,None
-3,0.095,0.274,1.386,426.072,vehi,km,None,None
-4,0.097,0.217,1.844,327.045,vehi,km,None,None
-5,0.082,0.196,1.752,281.066,vehi,km,None,None
-6,0.106,0.173,1.677,251.405,vehi,km,None,None
+2,0.076,0.389,1.014,579.848,vehi,km,None,None
+3,0.067,0.234,1.646,396.88,vehi,km,None,None
+4,0.064,0.217,1.707,325.475,vehi,km,None,None
+5,0.08,0.165,1.804,263.654,vehi,km,None,None
+6,0.073,0.124,2.106,226.953,vehi,km,None,None
 2,0.074,0.382,1.008,564.184,vehi,agg,cosine,complete
 3,0.091,0.269,1.393,420.962,vehi,agg,cosine,complete
 4,0.108,0.15,2.364,289.998,vehi,agg,cosine,complete

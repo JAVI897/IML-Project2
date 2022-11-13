@@ -9,3 +9,8 @@ Number of clusters,ari,sil,dbs,ch,dataset,clusteringAlg,affinity,linkage
 4,0.015,0.101,2.068,429.167,hyp,agg,cosine,average
 5,0.019,0.066,2.21,364.513,hyp,agg,cosine,average
 6,0.01,0.075,2.207,350.821,hyp,agg,cosine,average
+2,-0.053,0.182,1.993,579.429,hyp,agg,euclidean,ward
+3,0.041,0.197,1.65,559.856,hyp,agg,euclidean,ward
+4,0.025,0.118,1.635,536.542,hyp,agg,euclidean,ward
+5,0.017,0.124,1.679,491.457,hyp,agg,euclidean,ward
+6,0.042,0.101,1.819,450.384,hyp,agg,euclidean,ward
